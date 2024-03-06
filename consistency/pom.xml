@@ -70,6 +70,12 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-api</artifactId>
+        </dependency>
+
     </dependencies>
     <modelVersion>4.0.0</modelVersion>
     
