@@ -41,7 +41,7 @@ import java.util.Map;
 @Service
 public class RequestHandlerRegistry implements ApplicationListener<ContextRefreshedEvent> {
     
-    Map<String, RequestHandler> registryHandlers = new HashMap<>();
+    Map<String, RequestHandler> registryHandlers = new HashMap<>();// 请求处理器集合
     
     /**
      * Get Request Handler By request Type.
@@ -53,7 +53,7 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
         return registryHandlers.get(requestType);
     }
     
-    @Override
+    @Override // 加载 com.alibaba.nacos.core.remote.RequestHandler 的子类到 registryHandlers, 后续做请求处理使用,可以看做是策略模式的一个体现
     public void onApplicationEvent(ContextRefreshedEvent event) {
         Map<String, RequestHandler> beansOfType = event.getApplicationContext().getBeansOfType(RequestHandler.class);
         Collection<RequestHandler> values = beansOfType.values();
