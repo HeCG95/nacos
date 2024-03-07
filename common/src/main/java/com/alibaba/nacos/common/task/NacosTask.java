@@ -18,7 +18,7 @@ package com.alibaba.nacos.common.task;
 
 /**
  * Nacos task.
- *
+ * Nacos内部Task的统一接口：系统级别的任务都是通过它的相关子类实现
  * @author xiweng.yy
  */
 public interface NacosTask {
