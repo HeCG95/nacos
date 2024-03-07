@@ -52,7 +52,7 @@ public class NotifyCenter {
     
     private static final AtomicBoolean CLOSED = new AtomicBoolean(false);// 发布者的状态
     
-    private static final EventPublisherFactory DEFAULT_PUBLISHER_FACTORY;
+    private static final EventPublisherFactory DEFAULT_PUBLISHER_FACTORY;// 构造发布者的工厂
     
     private static final NotifyCenter INSTANCE = new NotifyCenter();// 通知中心的实例
     
@@ -69,22 +69,22 @@ public class NotifyCenter {
         // Internal ArrayBlockingQueue buffer size. For applications with high write throughput,
         // this value needs to be increased appropriately. default value is 16384
         String ringBufferSizeProperty = "nacos.core.notify.ring-buffer-size";
-        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);
+        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);// 初始化DefaultPublisher的queue容量值
         
         // The size of the public publisher's message staging queue buffer
         String shareBufferSizeProperty = "nacos.core.notify.share-buffer-size";
-        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);
-        
+        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);// 初始化DefaultSharePublisher的queue容量值
+        // 使用Nacos SPI机制获取事件发布者
         final Collection<EventPublisher> publishers = NacosServiceLoader.load(EventPublisher.class);
-        Iterator<EventPublisher> iterator = publishers.iterator();
+        Iterator<EventPublisher> iterator = publishers.iterator();// 获取迭代器
         
         if (iterator.hasNext()) {
             clazz = iterator.next().getClass();
         } else {
-            clazz = DefaultPublisher.class;
+            clazz = DefaultPublisher.class;// 若为空，则使用默认的发布器（单事件发布者）
         }
         
-        DEFAULT_PUBLISHER_FACTORY = (cls, buffer) -> {
+        DEFAULT_PUBLISHER_FACTORY = (cls, buffer) -> {// 声明发布者工厂为一个函数，用于创建发布者实例
             try {
                 EventPublisher publisher = clazz.newInstance();
                 publisher.init(cls, buffer);
