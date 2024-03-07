@@ -38,8 +38,8 @@ import static com.alibaba.nacos.api.exception.NacosException.SERVER_ERROR;
 
 /**
  * Unified Event Notify Center.
- *
- * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
+ * 通知中心：要用于注册发布者、调用发布者发布事件、为发布者注册订阅者、为指定的事件增加指定的订阅者等操作。可以说它完全接管了订阅者、发布者和事件他们的组合过程。直接调用通知中心的相关方法即可实现事件发布订阅者注册等功能。
+ * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a> https://www.liaochuntao.cn/archives/ https://www.liaochuntao.cn/about/
  * @author zongtanghu
  */
 public class NotifyCenter {
