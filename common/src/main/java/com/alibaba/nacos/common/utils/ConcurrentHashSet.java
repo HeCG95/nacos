@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConcurrentHashSet<E> extends AbstractSet<E> {
     
-    private ConcurrentHashMap<E, Boolean> map;
+    private ConcurrentHashMap<E, Boolean> map;// 内部使用了ConcurrentHashMap来实现存储
     
     public ConcurrentHashSet() {
         super();
@@ -51,7 +51,7 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
     
     @Override
     public boolean add(E o) {
-        return map.putIfAbsent(o, Boolean.TRUE) == null;
+        return map.putIfAbsent(o, Boolean.TRUE) == null;// 它以当前插入的Subscriber对象为key，以一个Boolean值占位：map.putIfAbsent(o, Boolean.TRUE)
     }
     
     @Override

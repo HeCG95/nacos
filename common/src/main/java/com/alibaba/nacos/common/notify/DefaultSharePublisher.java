@@ -27,34 +27,34 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The default share event publisher implementation for slow event.
- *
+ * 多事件发布者：用于发布SlowEvent事件并通知所有订阅了该事件的订阅者
  * @author zongtanghu
  */
 public class DefaultSharePublisher extends DefaultPublisher implements ShardedEventPublisher {
     
-    private final Map<Class<? extends SlowEvent>, Set<Subscriber>> subMappings = new ConcurrentHashMap<>();
+    private final Map<Class<? extends SlowEvent>, Set<Subscriber>> subMappings = new ConcurrentHashMap<>();// 用于保存事件类型为SlowEvent的订阅者，一个事件类型对应多个订阅者
     
-    private final Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();// 可重入锁
     
     @Override
     public void addSubscriber(Subscriber subscriber, Class<? extends Event> subscribeType) {
-        // Actually, do a classification based on the slowEvent type.
+        // Actually, do a classification based on the slowEvent type. 将事件类型转换为当前发布者支持的类型
         Class<? extends SlowEvent> subSlowEventType = (Class<? extends SlowEvent>) subscribeType;
         // For stop waiting subscriber, see {@link DefaultPublisher#openEventHandler}.
-        subscribers.add(subscriber);
+        subscribers.add(subscriber);// 添加到父类的订阅者列表中，为何要添加呢？因为它需要使用父类的队列消费逻辑
         
-        lock.lock();
+        lock.lock();// 为多个操作加锁
         try {
-            Set<Subscriber> sets = subMappings.get(subSlowEventType);
+            Set<Subscriber> sets = subMappings.get(subSlowEventType);// 首先从事件订阅列表里面获取当前事件对应的订阅者集合
             if (sets == null) {
-                Set<Subscriber> newSet = new ConcurrentHashSet<>();
-                newSet.add(subscriber);
+                Set<Subscriber> newSet = new ConcurrentHashSet<>();// 自己实现的ConcurrentHashSet
+                newSet.add(subscriber);// 若没有订阅者，则新增当前订阅者
                 subMappings.put(subSlowEventType, newSet);
                 return;
             }
-            sets.add(subscriber);
+            sets.add(subscriber);// 若当前事件订阅者列表不为空，则插入，因为使用的是Set集合因此可以避免重复数据
         } finally {
-            lock.unlock();
+            lock.unlock();// 释放锁
         }
     }
     
