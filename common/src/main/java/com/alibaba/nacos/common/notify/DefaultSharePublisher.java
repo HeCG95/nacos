@@ -36,7 +36,7 @@ public class DefaultSharePublisher extends DefaultPublisher implements ShardedEv
     
     private final Lock lock = new ReentrantLock();// 可重入锁
     
-    @Override
+    @Override // 添加订阅者
     public void addSubscriber(Subscriber subscriber, Class<? extends Event> subscribeType) {
         // Actually, do a classification based on the slowEvent type. 将事件类型转换为当前发布者支持的类型
         Class<? extends SlowEvent> subSlowEventType = (Class<? extends SlowEvent>) subscribeType;
@@ -58,40 +58,40 @@ public class DefaultSharePublisher extends DefaultPublisher implements ShardedEv
         }
     }
     
-    @Override
+    @Override // 移除订阅者
     public void removeSubscriber(Subscriber subscriber, Class<? extends Event> subscribeType) {
         // Actually, do a classification based on the slowEvent type.
-        Class<? extends SlowEvent> subSlowEventType = (Class<? extends SlowEvent>) subscribeType;
+        Class<? extends SlowEvent> subSlowEventType = (Class<? extends SlowEvent>) subscribeType;// 转换类型
         // For removing to parent class attributes synchronization.
-        subscribers.remove(subscriber);
+        subscribers.remove(subscriber);// 先移除父类中的订阅者
         
-        lock.lock();
+        lock.lock();// 加锁
         try {
-            Set<Subscriber> sets = subMappings.get(subSlowEventType);
+            Set<Subscriber> sets = subMappings.get(subSlowEventType);// 移除指定事件的指定订阅者
             
             if (sets != null) {
                 sets.remove(subscriber);
             }
         } finally {
-            lock.unlock();
+            lock.unlock();// 释放锁
         }
     }
     
-    @Override
+    @Override // 接收事件
     public void receiveEvent(Event event) {
         
-        final long currentEventSequence = event.sequence();
+        final long currentEventSequence = event.sequence();// 获取当前事件的序列号
         // get subscriber set based on the slow EventType.
-        final Class<? extends SlowEvent> slowEventType = (Class<? extends SlowEvent>) event.getClass();
+        final Class<? extends SlowEvent> slowEventType = (Class<? extends SlowEvent>) event.getClass();// 获取事件的类型，转换为当前发布器支持的事件
         
         // Get for Map, the algorithm is O(1).
-        Set<Subscriber> subscribers = subMappings.get(slowEventType);
+        Set<Subscriber> subscribers = subMappings.get(slowEventType);// 获取当前事件的订阅者列表
         if (null == subscribers) {
             LOGGER.debug("[NotifyCenter] No subscribers for slow event {}", slowEventType.getName());
             return;
         }
         
-        // Notification single event subscriber
+        // Notification single event subscriber 循环通知所有订阅者
         for (Subscriber subscriber : subscribers) {
             // Whether to ignore expiration events
             if (subscriber.ignoreExpireEvent() && lastEventSequence > currentEventSequence) {
@@ -100,7 +100,7 @@ public class DefaultSharePublisher extends DefaultPublisher implements ShardedEv
                 continue;
             }
             
-            // Notify single subscriber for slow event.
+            // Notify single subscriber for slow event. 通知逻辑和父类是共用的
             notifySubscriber(subscriber, event);
         }
     }
