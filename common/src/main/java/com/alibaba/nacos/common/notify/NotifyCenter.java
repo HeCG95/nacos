@@ -57,11 +57,11 @@ public class NotifyCenter {
     private static final NotifyCenter INSTANCE = new NotifyCenter();// 通知中心的实例
     
     private DefaultSharePublisher sharePublisher;// 默认的多事件发布者
-    
+    // 默认的单事件发布者类型 此处并未直接指定单事件发布者是谁，只是限定了它的类别，因为单事件发布者一个发布者只负责一个事件，因此会存在多个发布者实例，后面按需创建，并缓存在publisherMap
     private static Class<? extends EventPublisher> clazz;
     
     /**
-     * Publisher management container.
+     * Publisher management container. 单事件发布者存储容器
      */
     private final Map<String, EventPublisher> publisherMap = new ConcurrentHashMap<>(16);
     
