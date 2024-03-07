@@ -44,7 +44,7 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
     
     private final String name;
     
-    private final BlockingQueue<Runnable> queue;
+    private final BlockingQueue<Runnable> queue;// 阻塞队列
     
     private final AtomicBoolean closed;
     
@@ -60,7 +60,7 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
         this.closed = new AtomicBoolean(false);
         this.log = null == logger ? LoggerFactory.getLogger(TaskExecuteWorker.class) : logger;
         realWorker = new InnerWorker(this.name);
-        realWorker.start();
+        realWorker.start();// 开启线程
     }
     
     public String getName() {
@@ -70,7 +70,7 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
     @Override
     public boolean process(NacosTask task) {
         if (task instanceof AbstractExecuteTask) {
-            putTask((Runnable) task);
+            putTask((Runnable) task);// 任务放入队列
         }
         return true;
     }
@@ -101,7 +101,7 @@ public final class TaskExecuteWorker implements NacosTaskProcessor, Closeable {
         realWorker.interrupt();
     }
     
-    /**
+    /** 任务执行器，一直循环从阻塞队列获取任务然后执行
      * Inner execute worker.
      */
     private class InnerWorker extends Thread {
