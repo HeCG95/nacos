@@ -224,24 +224,24 @@ public class NotifyCenter {
      * @param consumer subscriber instance.
      */
     public static void deregisterSubscriber(final Subscriber consumer) {
-        if (consumer instanceof SmartSubscriber) {
-            for (Class<? extends Event> subscribeType : ((SmartSubscriber) consumer).subscribeTypes()) {
-                if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {
-                    INSTANCE.sharePublisher.removeSubscriber(consumer, subscribeType);
-                } else {
+        if (consumer instanceof SmartSubscriber) {// 若是多事件订阅者
+            for (Class<? extends Event> subscribeType : ((SmartSubscriber) consumer).subscribeTypes()) {// 获取事件列表
+                if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {// 若是慢事件
+                    INSTANCE.sharePublisher.removeSubscriber(consumer, subscribeType);// 从多事件发布者中移除
+                } else {// 否则从单事件发布者中移除
                     removeSubscriber(consumer, subscribeType);
                 }
             }
             return;
         }
         
-        final Class<? extends Event> subscribeType = consumer.subscribeType();
-        if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {
+        final Class<? extends Event> subscribeType = consumer.subscribeType();// 若是单事件订阅者
+        if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {// 判断是否是慢事件
             INSTANCE.sharePublisher.removeSubscriber(consumer, subscribeType);
             return;
         }
         
-        if (removeSubscriber(consumer, subscribeType)) {
+        if (removeSubscriber(consumer, subscribeType)) {// 调用移除方法
             return;
         }
         throw new NoSuchElementException("The subscriber has no event publisher");
@@ -256,11 +256,11 @@ public class NotifyCenter {
      */
     private static boolean removeSubscriber(final Subscriber consumer, Class<? extends Event> subscribeType) {
         
-        final String topic = ClassUtils.getCanonicalName(subscribeType);
-        EventPublisher eventPublisher = INSTANCE.publisherMap.get(topic);
+        final String topic = ClassUtils.getCanonicalName(subscribeType);// 获取topic
+        EventPublisher eventPublisher = INSTANCE.publisherMap.get(topic);// 根据topic获取对应的发布者
         if (null == eventPublisher) {
             return false;
-        }
+        }// 从发布者中移除订阅者
         if (eventPublisher instanceof ShardedEventPublisher) {
             ((ShardedEventPublisher) eventPublisher).removeSubscriber(consumer, subscribeType);
         } else {
