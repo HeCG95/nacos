@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * An abstract class for event.
- *
+ * 常规事件
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
  */
@@ -32,7 +32,7 @@ public abstract class Event implements Serializable {
     
     private static final AtomicLong SEQUENCE = new AtomicLong(0);
     
-    private final long sequence = SEQUENCE.getAndIncrement();
+    private final long sequence = SEQUENCE.getAndIncrement();// 在事件抽象类中定义了一个事件的序列号，它是自增的。用于区分事件执行的前后顺序。它是由DefaultPublisher来处理
     
     /**
      * Event sequence number, which can be used to handle the sequence of events.

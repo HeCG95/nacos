@@ -18,7 +18,7 @@ package com.alibaba.nacos.common.notify;
 
 /**
  * This event share one event-queue.
- *
+ * 可以共享一个事件队列，也就是一个发布者可以同时管理多个事件的发布（区别于DefaultPublisher只能管理一个事件）
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
  */
