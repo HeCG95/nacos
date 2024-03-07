@@ -166,38 +166,38 @@ public class NotifyCenter {
     /**
      * Register a Subscriber. If the Publisher concerned by the Subscriber does not exist, then PublihserMap will
      * preempt a placeholder Publisher with specified EventPublisherFactory first.
-     *
+     * 注册订阅者实际上就是将Subscriber添加到Publisher中。因为事件的发布是靠发布者来通知它内部的所有订阅者。
      * @param consumer subscriber
      * @param factory  publisher factory.
      */
     public static void registerSubscriber(final Subscriber consumer, final EventPublisherFactory factory) {
-        // If you want to listen to multiple events, you do it separately,
+        // If you want to listen to multiple events, you do it separately, 若想监听多个事件，实现SmartSubscriber.subscribeTypes()方法，在里面返回多个事件的列表即可
         // based on subclass's subscribeTypes method return list, it can register to publisher.
-        if (consumer instanceof SmartSubscriber) {
-            for (Class<? extends Event> subscribeType : ((SmartSubscriber) consumer).subscribeTypes()) {
+        if (consumer instanceof SmartSubscriber) {// 多事件订阅者注册
+            for (Class<? extends Event> subscribeType : ((SmartSubscriber) consumer).subscribeTypes()) {// 获取事件列表
                 // For case, producer: defaultSharePublisher -> consumer: smartSubscriber.
-                if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {
-                    INSTANCE.sharePublisher.addSubscriber(consumer, subscribeType);
+                if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {// 判断它的事件类型来决定采用哪种Publisher，多事件订阅者由多事件发布者调度
+                    INSTANCE.sharePublisher.addSubscriber(consumer, subscribeType);// 注册到多事件发布者中
                 } else {
                     // For case, producer: defaultPublisher -> consumer: subscriber.
-                    addSubscriber(consumer, subscribeType, factory);
+                    addSubscriber(consumer, subscribeType, factory);// 注册到单事件发布者中
                 }
             }
             return;
         }
-        
+        // 单事件的订阅者注册
         final Class<? extends Event> subscribeType = consumer.subscribeType();
-        if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {
+        if (ClassUtils.isAssignableFrom(SlowEvent.class, subscribeType)) {// 防止误使用，万一有人在使用单事件订阅者Subscriber的时候传入了SlowEvent则可以在此避免
             INSTANCE.sharePublisher.addSubscriber(consumer, subscribeType);
-            return;
+            return;// 添加完毕返回
         }
         
-        addSubscriber(consumer, subscribeType, factory);
+        addSubscriber(consumer, subscribeType, factory);// 注册到单事件发布者中
     }
     
     /**
      * Add a subscriber to publisher.
-     *
+     * 单事件发布者添加订阅者
      * @param consumer      subscriber instance.
      * @param subscribeType subscribeType.
      * @param factory       publisher factory.
@@ -205,12 +205,12 @@ public class NotifyCenter {
     private static void addSubscriber(final Subscriber consumer, Class<? extends Event> subscribeType,
             EventPublisherFactory factory) {
         
-        final String topic = ClassUtils.getCanonicalName(subscribeType);
+        final String topic = ClassUtils.getCanonicalName(subscribeType);// 获取类的规范名称，实际上就是包名加类名，作为topic
         synchronized (NotifyCenter.class) {
-            // MapUtils.computeIfAbsent is a unsafe method.
+            // MapUtils.computeIfAbsent is a unsafe method. 生成指定类型的发布者，并将其放入publisherMap中 使用topic为key从publisherMap获取数据，若为空则使用publisherFactory函数并传递subscribeType和ringBufferSize来实例化一个clazz类型的发布者对象，使用topic为key放入publisherMap中，实际上就是为每一个类型的事件创建一个发布者。具体可查看publisherFactory的逻辑
             MapUtil.computeIfAbsent(INSTANCE.publisherMap, topic, factory, subscribeType, ringBufferSize);
         }
-        EventPublisher publisher = INSTANCE.publisherMap.get(topic);
+        EventPublisher publisher = INSTANCE.publisherMap.get(topic);// 获取生成的发布者对象，将订阅者添加进去
         if (publisher instanceof ShardedEventPublisher) {
             ((ShardedEventPublisher) publisher).addSubscriber(consumer, subscribeType);
         } else {
@@ -330,7 +330,7 @@ public class NotifyCenter {
     
     /**
      * Register publisher with specified factory.
-     *
+     * 注册事件实际上就是将具体的事件和具体的发布者进行关联，发布者有2种类型，那么事件也一定是两种类型了（事件的类型这里说的是分类，服务于单事件发布者的事件和服务于多事件发布者的事件）
      * @param eventType    class Instances type of the event type.
      * @param factory      publisher factory.
      * @param queueMaxSize the publisher's queue max size.
@@ -338,12 +338,12 @@ public class NotifyCenter {
     public static EventPublisher registerToPublisher(final Class<? extends Event> eventType,
             final EventPublisherFactory factory, final int queueMaxSize) {
         if (ClassUtils.isAssignableFrom(SlowEvent.class, eventType)) {
-            return INSTANCE.sharePublisher;
+            return INSTANCE.sharePublisher;// 慢事件由多事件发布者处理
         }
-        
+        // 若不是慢事件，因为它可以存在多个不同的类型，因此需要判断对应的发布者是否存在
         final String topic = ClassUtils.getCanonicalName(eventType);
         synchronized (NotifyCenter.class) {
-            // MapUtils.computeIfAbsent is a unsafe method.
+            // MapUtils.computeIfAbsent is a unsafe method. 当前传入的事件类型对应的发布者，有则忽略无则新建
             MapUtil.computeIfAbsent(INSTANCE.publisherMap, topic, factory, eventType, queueMaxSize);
         }
         return INSTANCE.publisherMap.get(topic);
