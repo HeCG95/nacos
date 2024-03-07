@@ -21,7 +21,7 @@ import com.alibaba.nacos.sys.utils.ApplicationUtils;
 
 /**
  * Instance responsibility check interceptor.
- *
+ * 是否本机负责的检查拦截器：用于拦截InstanceBeatCheckTask类型的任务，拦截之后用于判断当前的Instance心跳检查任务是否由当前节点来处理，若不是则不进行后续的拦截操作
  * @author gengtuo.ygt
  * on 2021/3/24
  */

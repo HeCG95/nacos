@@ -25,7 +25,7 @@ import java.util.Optional;
 
 /**
  * Service enable beat check interceptor.
- *
+ * 用于检查Service是否开启了心跳检查的拦截器：用于拦截InstanceBeatCheckTask类型的任务，拦截之后用于判断当前的Service心跳检查任务是否开启
  * @author xiweng.yy
  */
 public class ServiceEnableBeatCheckInterceptor extends AbstractBeatCheckInterceptor {

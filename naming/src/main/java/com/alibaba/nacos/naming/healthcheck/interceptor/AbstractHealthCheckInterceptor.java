@@ -21,7 +21,7 @@ import com.alibaba.nacos.naming.interceptor.NacosNamingInterceptor;
 
 /**
  * Abstract health check interceptor.
- *
+ * 限定它的子类只可以拦截NacosHealthCheckTask类型的任务
  * @author xiweng.yy
  */
 public abstract class AbstractHealthCheckInterceptor implements NacosNamingInterceptor<NacosHealthCheckTask> {

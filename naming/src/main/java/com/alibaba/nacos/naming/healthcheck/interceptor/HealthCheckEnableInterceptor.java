@@ -22,7 +22,7 @@ import com.alibaba.nacos.sys.utils.ApplicationUtils;
 
 /**
  * Health check enable interceptor.
- *
+ * 检查是否开启了健康检查：用于拦截NacosHealthCheckTask类型的任务，拦截之后判断当前节点是否开启了健康检查。它的优先级最高
  * @author xiweng.yy
  */
 public class HealthCheckEnableInterceptor extends AbstractHealthCheckInterceptor {

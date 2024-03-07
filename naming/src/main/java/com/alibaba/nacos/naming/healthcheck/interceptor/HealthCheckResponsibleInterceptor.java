@@ -22,7 +22,7 @@ import com.alibaba.nacos.sys.utils.ApplicationUtils;
 
 /**
  * Health check responsible interceptor.
- *
+ * 判断是否需要拦截处理：用于拦截NacosHealthCheckTask类型的任务，拦截之后判断当前处理的任务是否应该由当前节点处理。它的优先级被设为最高级-1
  * @author xiweng.yy
  */
 public class HealthCheckResponsibleInterceptor extends AbstractHealthCheckInterceptor {
