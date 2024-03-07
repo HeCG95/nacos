@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Nacos based request handler.
- *
+ * 定义请求的处理流程
  * @author liuzunfei
  * @author xiweng.yy
  */

@@ -62,16 +62,16 @@ public class EphemeralClientOperationServiceImpl implements ClientOperationServi
                     String.format("Current service %s is persistent service, can't register ephemeral instance.",
                             singleton.getGroupedServiceName()));
         }
-        Client client = clientManager.getClient(clientId);
+        Client client = clientManager.getClient(clientId);// 获取client
         if (!clientIsLegal(client, clientId)) {
             return;
         }
-        InstancePublishInfo instanceInfo = getPublishInfo(instance);
-        client.addServiceInstance(singleton, instanceInfo);
-        client.setLastUpdatedTime();
-        client.recalculateRevision();
+        InstancePublishInfo instanceInfo = getPublishInfo(instance);// 创建一个实例
+        client.addServiceInstance(singleton, instanceInfo);// 缓存到连接的客户端里面，然后发布客户端变更事件
+        client.setLastUpdatedTime();// 更新最后更新时间
+        client.recalculateRevision();// 更新最后更新时间
         NotifyCenter.publishEvent(new ClientOperationEvent.ClientRegisterServiceEvent(singleton, clientId));
-        NotifyCenter
+        NotifyCenter // 发布元数据更新事件（matadataId=>ip:port:clusterName）
                 .publishEvent(new MetadataEvent.InstanceMetadataEvent(singleton, instanceInfo.getMetadataId(), false));
     }
     
