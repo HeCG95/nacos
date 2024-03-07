@@ -36,15 +36,15 @@ import com.alibaba.nacos.naming.push.v2.executor.PushExecutor;
  */
 public class PushDelayTaskExecuteEngine extends NacosDelayTaskExecuteEngine {
     
-    private final ClientManager clientManager;
+    private final ClientManager clientManager;// 客户端管理
     
-    private final ClientServiceIndexesManager indexesManager;
+    private final ClientServiceIndexesManager indexesManager;// 客户端服务管理器
     
-    private final ServiceStorage serviceStorage;
+    private final ServiceStorage serviceStorage;// 数据存储
     
-    private final NamingMetadataManager metadataManager;
+    private final NamingMetadataManager metadataManager;// 元数据管理
 
-    private final PushExecutor pushExecutor;
+    private final PushExecutor pushExecutor;// 执行器
     
     private final SwitchDomain switchDomain;
     
@@ -58,7 +58,7 @@ public class PushDelayTaskExecuteEngine extends NacosDelayTaskExecuteEngine {
         this.metadataManager = metadataManager;
         this.pushExecutor = pushExecutor;
         this.switchDomain = switchDomain;
-        setDefaultTaskProcessor(new PushDelayTaskProcessor(this));
+        setDefaultTaskProcessor(new PushDelayTaskProcessor(this));// 自定义默认的任务处理器
     }
     
     public ClientManager getClientManager() {
