@@ -46,9 +46,9 @@ public class NotifyCenter {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifyCenter.class);
     
-    public static int ringBufferSize;
+    public static int ringBufferSize;// 单事件发布者内部的事件队列初始容量
     
-    public static int shareBufferSize;
+    public static int shareBufferSize;// 多事件发布者内部的事件队列初始容量
     
     private static final AtomicBoolean CLOSED = new AtomicBoolean(false);// 发布者的状态
     
@@ -69,11 +69,11 @@ public class NotifyCenter {
         // Internal ArrayBlockingQueue buffer size. For applications with high write throughput,
         // this value needs to be increased appropriately. default value is 16384
         String ringBufferSizeProperty = "nacos.core.notify.ring-buffer-size";
-        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);// 单事件发布者内部的事件队列初始容量
+        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);
         
         // The size of the public publisher's message staging queue buffer
         String shareBufferSizeProperty = "nacos.core.notify.share-buffer-size";
-        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);// 多事件发布者内部的事件队列初始容量
+        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);
         
         final Collection<EventPublisher> publishers = NacosServiceLoader.load(EventPublisher.class);
         Iterator<EventPublisher> iterator = publishers.iterator();
