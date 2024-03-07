@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Instance request handler.
- *
+ * 实例注册，移除处理器
  * @author xiweng.yy
  */
 @Component

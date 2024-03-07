@@ -72,7 +72,7 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
                 continue;
             }
             
-            try {
+            try {// 需要TPS监控的类加入到tpsMonitorManager集合中
                 Method method = clazz.getMethod("handle", Request.class, RequestMeta.class);
                 if (method.isAnnotationPresent(TpsControl.class) && TpsControlConfig.isTpsControlEnabled()) {
                     TpsControl tpsControl = method.getAnnotation(TpsControl.class);
@@ -83,7 +83,7 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
                 //ignore.
             }
             Class tClass = (Class) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
-            registryHandlers.putIfAbsent(tClass.getSimpleName(), requestHandler);
+            registryHandlers.putIfAbsent(tClass.getSimpleName(), requestHandler);// 添加处理器到集合中
         }
     }
 }

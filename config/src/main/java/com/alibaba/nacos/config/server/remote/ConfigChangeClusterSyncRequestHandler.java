@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * handller to handler config change from other servers.
- *
+ * 节点之间配置互相同步的处理器
  * @author liuzunfei
  * @version $Id: ConfigChangeClusterSyncRequestHandler.java, v 0.1 2020年08月11日 4:35 PM liuzunfei Exp $
  */

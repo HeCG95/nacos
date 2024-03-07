@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Nacos query instances request handler.
- *
+ * 服务查询处理器
  * @author xiweng.yy
  */
 @Component

@@ -40,7 +40,7 @@ import java.sql.Timestamp;
 
 /**
  * handler to remove config.
- *
+ * 配置移除请求处理器
  * @author liuzunfei
  * @version $Id: ConfiRemoveRequestHandler.java, v 0.1 2020年07月16日 5:49 PM liuzunfei Exp $
  */

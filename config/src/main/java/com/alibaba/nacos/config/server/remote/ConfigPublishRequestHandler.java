@@ -48,7 +48,7 @@ import java.util.Map;
 
 /**
  * request handler to publish config.
- *
+ * 配置发布监听处理器
  * @author liuzunfei
  * @version $Id: ConfigPublishRequestHandler.java, v 0.1 2020年07月16日 4:41 PM liuzunfei Exp $
  */
