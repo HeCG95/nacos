@@ -89,7 +89,7 @@ public class PushDelayTaskExecuteEngine extends NacosDelayTaskExecuteEngine {
         super.processTasks();
     }
     
-    private static class PushDelayTaskProcessor implements NacosTaskProcessor {
+    private static class PushDelayTaskProcessor implements NacosTaskProcessor {// 自定义默认的处理器
         
         private final PushDelayTaskExecuteEngine executeEngine;
         
@@ -101,7 +101,7 @@ public class PushDelayTaskExecuteEngine extends NacosDelayTaskExecuteEngine {
         public boolean process(NacosTask task) {
             PushDelayTask pushDelayTask = (PushDelayTask) task;
             Service service = pushDelayTask.getService();
-            NamingExecuteTaskDispatcher.getInstance()
+            NamingExecuteTaskDispatcher.getInstance()// 任务分派
                     .dispatchAndExecuteTask(service, new PushExecuteTask(service, executeEngine, pushDelayTask));
             return true;
         }
