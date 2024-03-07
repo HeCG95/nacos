@@ -39,7 +39,7 @@ public class ClientBeatCheckTaskV2 extends AbstractExecuteTask implements BeatCh
     
     private final String taskId;
     
-    private final InstanceBeatCheckTaskInterceptorChain interceptorChain;// 拦截器列表对将要进行的任务进行拦截处理
+    private final InstanceBeatCheckTaskInterceptorChain interceptorChain;// 拦截器链：拦截器列表对将要进行的任务进行拦截处理
     
     public ClientBeatCheckTaskV2(IpPortBasedClient client) {
         this.client = client;
@@ -64,11 +64,11 @@ public class ClientBeatCheckTaskV2 extends AbstractExecuteTask implements BeatCh
     @Override
     public void doHealthCheck() {
         try {
-            Collection<Service> services = client.getAllPublishedService();
+            Collection<Service> services = client.getAllPublishedService();// 获取所有的Service
             for (Service each : services) {
                 HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) client
-                        .getInstancePublishInfo(each);
-                interceptorChain.doInterceptor(new InstanceBeatCheckTask(client, each, instance));// task 内部维护了一个Checker列表，用于添加额外的检查器
+                        .getInstancePublishInfo(each);// 获取Service对应的InstancePublishInfo
+                interceptorChain.doInterceptor(new InstanceBeatCheckTask(client, each, instance));// 创建一个InstanceBeatCheckTask[task 内部维护了一个Checker列表，用于添加额外的检查器]，并交由拦截器链处理
             }
         } catch (Exception e) {
             Loggers.SRV_LOG.warn("Exception while processing client beat time out.", e);

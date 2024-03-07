@@ -23,7 +23,7 @@ import com.alibaba.nacos.naming.core.v2.pojo.InstancePublishInfo;
 
 /**
  * Client beat update task.
- *
+ * 用于更新某个Client下所有的实例
  * @author xiweng.yy
  */
 public class ClientBeatUpdateTask extends AbstractExecuteTask {
@@ -36,7 +36,7 @@ public class ClientBeatUpdateTask extends AbstractExecuteTask {
     
     @Override
     public void run() {
-        long currentTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();// 获取当前时间，更新Client和Client下的Instance的最新活跃时间
         for (InstancePublishInfo each : client.getAllInstancePublishInfo()) {
             ((HealthCheckInstancePublishInfo) each).setLastHeartBeatTime(currentTime);
         }
