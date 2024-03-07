@@ -31,7 +31,7 @@ public class NamingExecuteTaskDispatcher {
     
     private final NacosExecuteTaskExecuteEngine executeEngine;
     
-    private NamingExecuteTaskDispatcher() {
+    private NamingExecuteTaskDispatcher() {// Nacos任务执行引擎
         executeEngine = new NacosExecuteTaskExecuteEngine(EnvUtil.FUNCTION_MODE_NAMING, Loggers.SRV_LOG);
     }
     
@@ -40,7 +40,7 @@ public class NamingExecuteTaskDispatcher {
     }
     
     public void dispatchAndExecuteTask(Object dispatchTag, AbstractExecuteTask task) {
-        executeEngine.addTask(dispatchTag, task);
+        executeEngine.addTask(dispatchTag, task);// 执行引擎中添加任务
     }
     
     public String workersStatus() {
