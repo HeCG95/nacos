@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentMap;
 @Component
 public class ServiceStorage {
     
-    private final ClientServiceIndexesManager serviceIndexesManager;
+    private final ClientServiceIndexesManager serviceIndexesManager;// 客户单连接注册服务索引
     
     private final ClientManager clientManager;
     
@@ -56,9 +56,9 @@ public class ServiceStorage {
     
     private final NamingMetadataManager metadataManager;
     
-    private final ConcurrentMap<Service, ServiceInfo> serviceDataIndexes;
+    private final ConcurrentMap<Service, ServiceInfo> serviceDataIndexes;// 服务信息
     
-    private final ConcurrentMap<Service, Set<String>> serviceClusterIndex;
+    private final ConcurrentMap<Service, Set<String>> serviceClusterIndex;// 集群索引管理    key:value=>Service:Set(ClusterName)
     
     public ServiceStorage(ClientServiceIndexesManager serviceIndexesManager, ClientManagerDelegate clientManager,
             SwitchDomain switchDomain, NamingMetadataManager metadataManager) {
@@ -70,22 +70,22 @@ public class ServiceStorage {
         this.serviceClusterIndex = new ConcurrentHashMap<>();
     }
     
-    public Set<String> getClusters(Service service) {
+    public Set<String> getClusters(Service service) {// 获取当前服务下的集群信息
         return serviceClusterIndex.getOrDefault(service, new HashSet<>());
     }
     
-    public ServiceInfo getData(Service service) {
+    public ServiceInfo getData(Service service) {// 获取服务的数据信息
         return serviceDataIndexes.containsKey(service) ? serviceDataIndexes.get(service) : getPushData(service);
     }
     
     public ServiceInfo getPushData(Service service) {
         ServiceInfo result = emptyServiceInfo(service);
         if (!ServiceManager.getInstance().containSingleton(service)) {
-            return result;
+            return result;// ServiceManager不存在，则直接返回
         }
         Service singleton = ServiceManager.getInstance().getSingleton(service);
-        result.setHosts(getAllInstancesFromIndex(singleton));
-        serviceDataIndexes.put(singleton, result);
+        result.setHosts(getAllInstancesFromIndex(singleton));// 更新Service下的集群新信息
+        serviceDataIndexes.put(singleton, result);// 更新服务下的实例信息
         return result;
     }
     
@@ -103,12 +103,12 @@ public class ServiceStorage {
         return result;
     }
     
-    private List<Instance> getAllInstancesFromIndex(Service service) {
+    private List<Instance> getAllInstancesFromIndex(Service service) {// 获取当前Service下的所有的Instance信息，并更新当前Service下的集群信息
         Set<Instance> result = new HashSet<>();
         Set<String> clusters = new HashSet<>();
         for (String each : serviceIndexesManager.getAllClientsRegisteredService(service)) {
             Optional<InstancePublishInfo> instancePublishInfo = getInstanceInfo(each, service);
-            if (instancePublishInfo.isPresent()) {
+            if (instancePublishInfo.isPresent()) {// 获取实例并更新实例的元数据信息
                 InstancePublishInfo publishInfo = instancePublishInfo.get();
                 //If it is a BatchInstancePublishInfo type, it will be processed manually and added to the instance list
                 if (publishInfo instanceof BatchInstancePublishInfo) {
