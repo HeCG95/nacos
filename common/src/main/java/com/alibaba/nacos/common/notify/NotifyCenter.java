@@ -86,8 +86,8 @@ public class NotifyCenter {
         
         DEFAULT_PUBLISHER_FACTORY = (cls, buffer) -> {// 声明发布者工厂为一个函数，用于创建发布者实例
             try {
-                EventPublisher publisher = clazz.newInstance();
-                publisher.init(cls, buffer);
+                EventPublisher publisher = clazz.newInstance();// 为指定类型的事件创建一个单事件发布者对象 - 实例化发布者
+                publisher.init(cls, buffer);// 初始化
                 return publisher;
             } catch (Throwable ex) {
                 LOGGER.error("Service class newInstance has error : ", ex);
@@ -97,7 +97,7 @@ public class NotifyCenter {
         
         try {
             
-            // Create and init DefaultSharePublisher instance.
+            // Create and init DefaultSharePublisher instance. 初始化多事件发布者
             INSTANCE.sharePublisher = new DefaultSharePublisher();
             INSTANCE.sharePublisher.init(SlowEvent.class, shareBufferSize);
             
@@ -105,7 +105,7 @@ public class NotifyCenter {
             LOGGER.error("Service class newInstance has error : ", ex);
         }
         
-        ThreadUtils.addShutdownHook(NotifyCenter::shutdown);
+        ThreadUtils.addShutdownHook(NotifyCenter::shutdown);// 增加关闭钩子，用于关闭Publisher
     }
     
     @JustForTest
