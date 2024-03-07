@@ -291,14 +291,14 @@ public class NotifyCenter {
      * @param event     event instance.
      */
     private static boolean publishEvent(final Class<? extends Event> eventType, final Event event) {
-        if (ClassUtils.isAssignableFrom(SlowEvent.class, eventType)) {
+        if (ClassUtils.isAssignableFrom(SlowEvent.class, eventType)) {// 慢事件处理
             return INSTANCE.sharePublisher.publish(event);
         }
         
         final String topic = ClassUtils.getCanonicalName(eventType);
         
         EventPublisher publisher = INSTANCE.publisherMap.get(topic);
-        if (publisher != null) {
+        if (publisher != null) {// 常规事件处理
             return publisher.publish(event);
         }
         if (event.isPluginEvent()) {
