@@ -50,13 +50,13 @@ public class NotifyCenter {
     
     public static int shareBufferSize;
     
-    private static final AtomicBoolean CLOSED = new AtomicBoolean(false);
+    private static final AtomicBoolean CLOSED = new AtomicBoolean(false);// 发布者的状态
     
     private static final EventPublisherFactory DEFAULT_PUBLISHER_FACTORY;
     
-    private static final NotifyCenter INSTANCE = new NotifyCenter();
+    private static final NotifyCenter INSTANCE = new NotifyCenter();// 通知中心的实例
     
-    private DefaultSharePublisher sharePublisher;
+    private DefaultSharePublisher sharePublisher;// 默认的多事件发布者
     
     private static Class<? extends EventPublisher> clazz;
     
@@ -69,11 +69,11 @@ public class NotifyCenter {
         // Internal ArrayBlockingQueue buffer size. For applications with high write throughput,
         // this value needs to be increased appropriately. default value is 16384
         String ringBufferSizeProperty = "nacos.core.notify.ring-buffer-size";
-        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);
+        ringBufferSize = Integer.getInteger(ringBufferSizeProperty, 16384);// 单事件发布者内部的事件队列初始容量
         
         // The size of the public publisher's message staging queue buffer
         String shareBufferSizeProperty = "nacos.core.notify.share-buffer-size";
-        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);
+        shareBufferSize = Integer.getInteger(shareBufferSizeProperty, 1024);// 多事件发布者内部的事件队列初始容量
         
         final Collection<EventPublisher> publishers = NacosServiceLoader.load(EventPublisher.class);
         Iterator<EventPublisher> iterator = publishers.iterator();
