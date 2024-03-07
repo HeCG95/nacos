@@ -27,12 +27,12 @@ import java.util.List;
 
 /**
  * Instance beat check task.
- *
+ * 实例心跳检查任务：用于检查心跳的执行状态
  * @author xiweng.yy
  */
 public class InstanceBeatCheckTask implements Interceptable {
     
-    private static final List<InstanceBeatChecker> CHECKERS = new LinkedList<>();// 检查器列表
+    private static final List<InstanceBeatChecker> CHECKERS = new LinkedList<>();// 检查器集合
     
     private final IpPortBasedClient client;
     
@@ -40,7 +40,7 @@ public class InstanceBeatCheckTask implements Interceptable {
     
     private final HealthCheckInstancePublishInfo instancePublishInfo;
     
-    static {
+    static {// 初始化时获取检查器
         CHECKERS.add(new UnhealthyInstanceChecker());
         CHECKERS.add(new ExpiredInstanceChecker());
         CHECKERS.addAll(NacosServiceLoader.load(InstanceBeatChecker.class));
@@ -53,7 +53,7 @@ public class InstanceBeatCheckTask implements Interceptable {
     }
     
     @Override
-    public void passIntercept() {
+    public void passIntercept() {// 当没有被拦截的时候执行检查
         for (InstanceBeatChecker each : CHECKERS) {
             each.doCheck(client, service, instancePublishInfo);
         }
