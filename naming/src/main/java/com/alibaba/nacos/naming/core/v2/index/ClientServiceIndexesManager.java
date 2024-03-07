@@ -92,7 +92,7 @@ public class ClientServiceIndexesManager extends SmartSubscriber {
     public void onEvent(Event event) {
         if (event instanceof ClientEvent.ClientDisconnectEvent) {
             handleClientDisconnect((ClientEvent.ClientDisconnectEvent) event);
-        } else if (event instanceof ClientOperationEvent) {
+        } else if (event instanceof ClientOperationEvent) {// 客户端注册实例事件
             handleClientOperation((ClientOperationEvent) event);
         }
     }
