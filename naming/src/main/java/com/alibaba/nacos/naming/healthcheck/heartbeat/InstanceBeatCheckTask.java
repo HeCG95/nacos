@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class InstanceBeatCheckTask implements Interceptable {
     
-    private static final List<InstanceBeatChecker> CHECKERS = new LinkedList<>();
+    private static final List<InstanceBeatChecker> CHECKERS = new LinkedList<>();// 检查器列表
     
     private final IpPortBasedClient client;
     

@@ -35,7 +35,7 @@ import java.util.Optional;
 
 /**
  * Health check task for v2.x.
- *
+ * 处理各种连接的状态
  * <p>Current health check logic is same as v1.x. TODO refactor health check for v2.x.
  *
  * @author nacos
@@ -114,7 +114,7 @@ public class HealthCheckTaskV2 extends AbstractExecuteTask implements NacosHealt
                 if (switchDomain.isHealthCheckEnabled(each.getGroupedServiceName())) {
                     InstancePublishInfo instancePublishInfo = client.getInstancePublishInfo(each);
                     ClusterMetadata metadata = getClusterMetadata(each, instancePublishInfo);
-                    ApplicationUtils.getBean(HealthCheckProcessorV2Delegate.class).process(this, each, metadata);
+                    ApplicationUtils.getBean(HealthCheckProcessorV2Delegate.class).process(this, each, metadata);// 使用HealthCheckProcessorV2Delegate对任务进行处理
                     if (Loggers.EVT_LOG.isDebugEnabled()) {
                         Loggers.EVT_LOG.debug("[HEALTH-CHECK] schedule health check task: {}", client.getClientId());
                     }
