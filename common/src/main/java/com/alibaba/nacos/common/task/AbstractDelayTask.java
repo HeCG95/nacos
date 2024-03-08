@@ -24,12 +24,12 @@ package com.alibaba.nacos.common.task;
  */
 public abstract class AbstractDelayTask implements NacosTask {
     
-    /**
+    /** 任务执行间隔时长（单位：毫秒）
      * Task time interval between twice processing, unit is millisecond.
      */
     private long taskInterval;
     
-    /**
+    /** 上一次执行的事件（单位：毫秒）
      * The time which was processed at last time, unit is millisecond.
      */
     private long lastProcessTime;
@@ -41,7 +41,7 @@ public abstract class AbstractDelayTask implements NacosTask {
     
     /**
      * merge task.
-     *
+     * 合并任务，关于合并任务，请查看它的子类实现
      * @param task task
      */
     public abstract void merge(AbstractDelayTask task);
