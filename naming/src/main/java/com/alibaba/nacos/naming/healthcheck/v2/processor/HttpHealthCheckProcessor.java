@@ -43,7 +43,7 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
 
 /**
  * TCP health check processor for v2.x.
- *
+ * Http方式的心跳检查处理器：HTTP方式的健康检查处理器。目前逻辑和v1版本相同，后续会重构
  * <p>Current health check logic is same as v1.x. TODO refactor health check for v2.x.
  *
  * @author xiweng.yy
@@ -51,12 +51,12 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
 @Component
 public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
     
-    public static final String TYPE = HealthCheckType.HTTP.name();
+    public static final String TYPE = HealthCheckType.HTTP.name();//  当前处理的类型
     
     private static final NacosAsyncRestTemplate ASYNC_REST_TEMPLATE = HttpClientManager
-            .getProcessorNacosAsyncRestTemplate();
+            .getProcessorNacosAsyncRestTemplate();// 请求模板，用于处理http请求
     
-    private final HealthCheckCommonV2 healthCheckCommon;
+    private final HealthCheckCommonV2 healthCheckCommon;// 健康检查公用方法集合
     
     private final SwitchDomain switchDomain;
     
@@ -68,7 +68,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
     @Override
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
         HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) task.getClient()
-                .getInstancePublishInfo(service);
+                .getInstancePublishInfo(service);// 获取指定Service对应的InstancePublishInfo
         if (null == instance) {
             return;
         }
@@ -77,13 +77,13 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
             if (!instance.tryStartCheck()) {
                 SRV_LOG.warn("http check started before last one finished, service: {} : {} : {}:{}",
                         service.getGroupedServiceName(), instance.getCluster(), instance.getIp(), instance.getPort());
-                healthCheckCommon
+                healthCheckCommon// 更新instance的开始检查状态
                         .reEvaluateCheckRT(task.getCheckRtNormalized() * 2, task, switchDomain.getHttpHealthParams());
                 return;
             }
             
-            Http healthChecker = (Http) metadata.getHealthChecker();
-            int ckPort = metadata.isUseInstancePortForCheck() ? instance.getPort() : metadata.getHealthyCheckPort();
+            Http healthChecker = (Http) metadata.getHealthChecker();// 获取检查器
+            int ckPort = metadata.isUseInstancePortForCheck() ? instance.getPort() : metadata.getHealthyCheckPort();// 获取实例所在的网络位置
             URL host = new URL(HTTP_PREFIX + instance.getIp() + ":" + ckPort);
             URL target = new URL(host, healthChecker.getPath());
             Map<String, String> customHeaders = healthChecker.getCustomHeaders();
@@ -91,7 +91,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
             header.addAll(customHeaders);
             
             ASYNC_REST_TEMPLATE.get(target.toString(), header, Query.EMPTY, String.class,
-                    new HttpHealthCheckCallback(instance, task, service));
+                    new HttpHealthCheckCallback(instance, task, service));// 发送http请求
             MetricsMonitor.getHttpHealthCheckMonitor().incrementAndGet();
         } catch (Throwable e) {
             instance.setCheckRt(switchDomain.getHttpHealthParams().getMax());
@@ -106,7 +106,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
         return TYPE;
     }
     
-    private class HttpHealthCheckCallback implements Callback<String> {
+    private class HttpHealthCheckCallback implements Callback<String> {// 健康检查回调
         
         private final HealthCheckTaskV2 task;
         
@@ -125,9 +125,9 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessorV2 {
         
         @Override
         public void onReceive(RestResult<String> result) {
-            instance.setCheckRt(System.currentTimeMillis() - startTime);
+            instance.setCheckRt(System.currentTimeMillis() - startTime);// 设置本次响应时间
             int httpCode = result.getCode();
-            if (HttpURLConnection.HTTP_OK == httpCode) {
+            if (HttpURLConnection.HTTP_OK == httpCode) {// 判断请求结果
                 healthCheckCommon.checkOk(task, service, "http:" + httpCode);
                 healthCheckCommon.reEvaluateCheckRT(System.currentTimeMillis() - startTime, task,
                         switchDomain.getHttpHealthParams());
