@@ -22,7 +22,7 @@ import com.alibaba.nacos.naming.core.v2.pojo.Service;
 import com.alibaba.nacos.naming.healthcheck.v2.HealthCheckTaskV2;
 import org.springframework.stereotype.Component;
 
-/**
+/** 兜底处理器，默认对任务不作任何处理
  * none health check processor,it will do not anything.
  * @author onewe
  */

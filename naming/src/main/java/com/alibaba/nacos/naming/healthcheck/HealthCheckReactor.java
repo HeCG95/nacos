@@ -39,7 +39,7 @@ public class HealthCheckReactor {
     
     /**
      * Schedule health check task for v2.
-     *
+     * 执行一个延迟的客户端心跳检查
      * @param task health check task
      */
     public static void scheduleCheck(HealthCheckTaskV2 task) {

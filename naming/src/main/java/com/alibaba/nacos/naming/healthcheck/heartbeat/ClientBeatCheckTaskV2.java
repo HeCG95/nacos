@@ -64,7 +64,7 @@ public class ClientBeatCheckTaskV2 extends AbstractExecuteTask implements BeatCh
     @Override
     public void doHealthCheck() {
         try {
-            Collection<Service> services = client.getAllPublishedService();// 获取所有的Service
+            Collection<Service> services = client.getAllPublishedService();// 获取当前客户端下所有的服务
             for (Service each : services) {
                 HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) client
                         .getInstancePublishInfo(each);// 获取Service对应的InstancePublishInfo

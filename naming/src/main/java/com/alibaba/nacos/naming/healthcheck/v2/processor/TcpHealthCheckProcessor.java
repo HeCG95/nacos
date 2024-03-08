@@ -169,7 +169,7 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
             Beat beat = (Beat) key.attachment();
             SocketChannel channel = (SocketChannel) key.channel();
             try {
-                if (!beat.isHealthy()) {
+                if (!beat.isHealthy()) {// 如果心跳检测已经超时，关闭对应的channel
                     //invalid beat means this server is no longer responsible for the current service
                     key.cancel();
                     key.channel().close();
@@ -178,21 +178,21 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
                     return;
                 }
                 
-                if (key.isValid() && key.isConnectable()) {
+                if (key.isValid() && key.isConnectable()) {// 是否支持套接字连接操作
                     //connected
-                    channel.finishConnect();
+                    channel.finishConnect();// 判断是否连接成功
                     beat.finishCheck(true, false, System.currentTimeMillis() - beat.getTask().getStartTime(),
-                            "tcp:ok+");
+                            "tcp:ok+");// 更新心跳信息
                 }
                 
-                if (key.isValid() && key.isReadable()) {
+                if (key.isValid() && key.isReadable()) {// 判断key的channel是否支持read操作
                     //disconnected
-                    ByteBuffer buffer = ByteBuffer.allocate(128);
+                    ByteBuffer buffer = ByteBuffer.allocate(128);// 从channel读取数据到buffer
                     if (channel.read(buffer) == -1) {
                         key.cancel();
                         key.channel().close();
                     } else {
-                        // not terminate request, ignore
+                        // not terminate request, ignore 若读取到channel内的数据，忽略此请求保持连接
                         SRV_LOG.warn(
                                 "Tcp check ok, but the connected server responses some msg. Connection won't be closed.");
                     }
@@ -206,15 +206,15 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
                         "tcp:error:" + e.getMessage());
                 
                 try {
-                    key.cancel();
+                    key.cancel();// 发生异常关闭连接
                     key.channel().close();
                 } catch (Exception ignore) {
                 }
             }
         }
     }
-    
-    private class Beat {
+    // 心跳对象
+    private class Beat {// 请注意构造方法传入的HealthCheckTaskV2 task， 后续一系列的处理将会调用原有的这个task来进行一些操作
         
         private final HealthCheckTaskV2 task;
         
@@ -306,7 +306,7 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
         }
     }
     
-    private static class BeatKey {
+    private static class BeatKey {// 用于记录连接的创建时间
         
         public SelectionKey key;
         
@@ -317,7 +317,7 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
             this.birthTime = System.currentTimeMillis();
         }
     }
-    
+    // 超时任务，此任务创建时，任务不一定超时 是在此任务内部来判断是否超时，以及作相应的处理
     private static class TimeOutTask implements Runnable {
         
         SelectionKey key;
@@ -329,19 +329,19 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
         @Override
         public void run() {
             if (key != null && key.isValid()) {
-                SocketChannel channel = (SocketChannel) key.channel();
-                Beat beat = (Beat) key.attachment();
-                
+                SocketChannel channel = (SocketChannel) key.channel();// 获取本次心跳的channel对象
+                Beat beat = (Beat) key.attachment();// 获取注册时传入的Beat
+                // 判断是否连接成功，因为当前判断条件在TimeOutTask对象内，如果连接成功就不是timeout，不需要执行后续操作
                 if (channel.isConnected()) {
                     return;
                 }
                 
                 try {
-                    channel.finishConnect();
+                    channel.finishConnect();// 完成本次连接
                 } catch (Exception ignore) {
                 }
                 
-                try {
+                try {// 设置check状态为false，关闭本channel的选择，让selector不再处理
                     beat.finishCheck(false, false, beat.getTask().getCheckRtNormalized() * 2, "tcp:timeout");
                     key.cancel();
                     key.channel().close();
@@ -350,12 +350,12 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
             }
         }
     }
-    
+    // 任务处理器
     private class TaskProcessor implements Callable<Void> {
         
-        private static final int MAX_WAIT_TIME_MILLISECONDS = 500;
+        private static final int MAX_WAIT_TIME_MILLISECONDS = 500;// 最大等待时间500毫秒
         
-        Beat beat;
+        Beat beat;// 心跳对象
         
         public TaskProcessor(Beat beat) {
             this.beat = beat;
@@ -363,8 +363,8 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
         
         @Override
         public Void call() {
-            long waited = System.currentTimeMillis() - beat.getStartTime();
-            if (waited > MAX_WAIT_TIME_MILLISECONDS) {
+            long waited = System.currentTimeMillis() - beat.getStartTime();// 当前任务已等待的时长
+            if (waited > MAX_WAIT_TIME_MILLISECONDS) {// 当前任务等待时长超过500毫秒，打印警告信息
                 Loggers.SRV_LOG.warn("beat task waited too long: " + waited + "ms");
             }
             
@@ -394,22 +394,22 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
                 ClusterMetadata cluster = beat.getMetadata();
                 int port = cluster.isUseInstancePortForCheck() ? instance.getPort() : cluster.getHealthyCheckPort();
                 channel.connect(new InetSocketAddress(instance.getIp(), port));
-                
+                // 注册Channel到Register
                 SelectionKey key = channel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
                 key.attach(beat);
                 keyMap.put(beat.toString(), new BeatKey(key));
-                
+                // 设置心跳开始时间
                 beat.setStartTime(System.currentTimeMillis());
-                
+                // 启动超感任务，这里将SelectionKey传入了TimeOutTask，意味着后者将会知道当前心跳任务的连接状态
                 GlobalExecutor
                         .scheduleTcpSuperSenseTask(new TimeOutTask(key), CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 beat.finishCheck(false, false, switchDomain.getTcpHealthParams().getMax(),
-                        "tcp:error:" + e.getMessage());
+                        "tcp:error:" + e.getMessage());// 设置为检查失败
                 
                 if (channel != null) {
                     try {
-                        channel.close();
+                        channel.close();// 关闭连接
                     } catch (Exception ignore) {
                     }
                 }
