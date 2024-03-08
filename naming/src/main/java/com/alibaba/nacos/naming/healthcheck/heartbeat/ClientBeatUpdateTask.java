@@ -23,12 +23,12 @@ import com.alibaba.nacos.naming.core.v2.pojo.InstancePublishInfo;
 
 /**
  * Client beat update task.
- * 用于更新某个Client下所有的实例
+ * 客户端心跳更新任务：用于更新Client的最新活跃时间，更新某个Client下所有的实例
  * @author xiweng.yy
  */
 public class ClientBeatUpdateTask extends AbstractExecuteTask {
     
-    private final IpPortBasedClient client;
+    private final IpPortBasedClient client;// 客户端对象
     
     public ClientBeatUpdateTask(IpPortBasedClient client) {
         this.client = client;
