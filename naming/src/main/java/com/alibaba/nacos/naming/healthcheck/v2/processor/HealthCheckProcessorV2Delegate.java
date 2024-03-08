@@ -31,21 +31,21 @@ import java.util.stream.Collectors;
 
 /**
  * Delegate of health check v2.x.
- *
+ * v2健康检查处理器代理：使用代理模式管理不同类型的处理器
  * @author nacos
  */
 @Component("healthCheckDelegateV2")
 public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
-    
+    // 不同的处理器集合
     private final Map<String, HealthCheckProcessorV2> healthCheckProcessorMap = new HashMap<>();
     
     public HealthCheckProcessorV2Delegate(HealthCheckExtendProvider provider,
             HealthCheckProcessorExtendV2 healthCheckProcessorExtend) {
         provider.setHealthCheckProcessorExtend(healthCheckProcessorExtend);
-        provider.init();
+        provider.init();// 初始化SPI扩展的加载，用于获取用户自定义的processor和checker
     }
     
-    @Autowired
+    @Autowired// 添加processor到容器，以处理类别为key
     public void addProcessor(Collection<HealthCheckProcessorV2> processors) {
         healthCheckProcessorMap.putAll(processors.stream().filter(processor -> processor.getType() != null)
                 .collect(Collectors.toMap(HealthCheckProcessorV2::getType, processor -> processor)));
@@ -53,12 +53,12 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
     
     @Override
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
-        String type = metadata.getHealthyCheckType();
-        HealthCheckProcessorV2 processor = healthCheckProcessorMap.get(type);
-        if (processor == null) {
+        String type = metadata.getHealthyCheckType();// 从元数据中获取处理方式的类别
+        HealthCheckProcessorV2 processor = healthCheckProcessorMap.get(type);// 获取指定的处理器
+        if (processor == null) {// 若未获取到，指定一个默认的处理器，默认不作处理
             processor = healthCheckProcessorMap.get(NoneHealthCheckProcessor.TYPE);
         }
-        processor.process(task, service, metadata);
+        processor.process(task, service, metadata);// 调用处理器进行处理
     }
     
     @Override

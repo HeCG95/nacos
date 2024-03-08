@@ -22,7 +22,7 @@ import com.alibaba.nacos.naming.healthcheck.v2.HealthCheckTaskV2;
 
 /**
  * Health check processor for v2.x.
- *
+ * v2版本的健康检查处理器：只能用于处理 HealthCheckTaskV2类型的任务
  * @author nkorange
  */
 public interface HealthCheckProcessorV2 {
