@@ -49,7 +49,7 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
 
 /**
  * TCP health check processor for v2.x.
- *
+ * TCP请求方式的健康检查处理器，内部使用NIO实现网络通信
  * <p>Current health check logic is same as v1.x. TODO refactor health check for v2.x.
  *
  * @author xiweng.yy
@@ -57,45 +57,45 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
 @Component
 public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable {
     
-    public static final String TYPE = HealthCheckType.TCP.name();
+    public static final String TYPE = HealthCheckType.TCP.name();// 当前的Processor可处理的Task类型为TCP
     
-    public static final int CONNECT_TIMEOUT_MS = 500;
+    public static final int CONNECT_TIMEOUT_MS = 500;// 连接超时时长
     
     /**
      * this value has been carefully tuned, do not modify unless you're confident.
      */
-    private static final int NIO_THREAD_COUNT = EnvUtil.getAvailableProcessors(0.5);
+    private static final int NIO_THREAD_COUNT = EnvUtil.getAvailableProcessors(0.5);// NIO线程数量
     
     /**
      * because some hosts doesn't support keep-alive connections, disabled temporarily.
      */
     private static final long TCP_KEEP_ALIVE_MILLIS = 0;
     
-    private final HealthCheckCommonV2 healthCheckCommon;
+    private final HealthCheckCommonV2 healthCheckCommon;// v2版本健康检查通用方法集合
     
     private final SwitchDomain switchDomain;
     
     private final Map<String, BeatKey> keyMap = new ConcurrentHashMap<>();
     
-    private final BlockingQueue<Beat> taskQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Beat> taskQueue = new LinkedBlockingQueue<>();// Tcp心跳任务阻塞队列，用于实现生产者消费者模式
     
-    private final Selector selector;
+    private final Selector selector;// NIO多路复用器，用于管理多个线程的网络连接，此处就是检查多个心跳的连接
     
     public TcpHealthCheckProcessor(HealthCheckCommonV2 healthCheckCommon, SwitchDomain switchDomain) {
         this.healthCheckCommon = healthCheckCommon;
         this.switchDomain = switchDomain;
         try {
-            selector = Selector.open();
-            GlobalExecutor.submitTcpCheck(this);
+            selector = Selector.open();// 创建Selector
+            GlobalExecutor.submitTcpCheck(this);// 使用线程执行器执行当前类，也就是将当前类作为消费者启动，run方法内部的循环将会持续进行，不断消费数据
         } catch (Exception e) {
             throw new IllegalStateException("Error while initializing SuperSense(TM).");
         }
     }
-    
-    @Override
+    // 作为Processor的时候，它提供process方法来对task进行处理，处理的结果就是将其放入消费队列
+    @Override// 作为一个线程运行的时候，它作为消费者，不断从队列中获取任务来执行
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
         HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) task.getClient()
-                .getInstancePublishInfo(service);
+                .getInstancePublishInfo(service);// 获取Instance的检查信息
         if (null == instance) {
             return;
         }
@@ -106,7 +106,7 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
             healthCheckCommon
                     .reEvaluateCheckRT(task.getCheckRtNormalized() * 2, task, switchDomain.getTcpHealthParams());
             return;
-        }
+        }// 处理任务时，将其放入队列内部，此处相当于生产者，每调用一次process都会将其放入队列
         taskQueue.add(new Beat(task, service, metadata, instance));
         MetricsMonitor.getTcpHealthCheckMonitor().incrementAndGet();
     }
@@ -115,18 +115,18 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
     public String getType() {
         return TYPE;
     }
-    
+    // 处理TCP健康检查任务
     private void processTask() throws Exception {
-        Collection<Callable<Void>> tasks = new LinkedList<>();
-        do {
-            Beat beat = taskQueue.poll(CONNECT_TIMEOUT_MS / 2, TimeUnit.MILLISECONDS);
-            if (beat == null) {
+        Collection<Callable<Void>> tasks = new LinkedList<>();// 任务处理器集合，为每一个Beat创建一个TaskProcessor
+        do {// 疯狂从队列获取心跳信息
+            Beat beat = taskQueue.poll(CONNECT_TIMEOUT_MS / 2, TimeUnit.MILLISECONDS);// 从队列获取元素，超时时间为250毫秒
+            if (beat == null) {// 若数据为空，继续执行下次循环
                 return;
             }
-            
+            // 添加任务到集合中，后续一次性处理
             tasks.add(new TaskProcessor(beat));
-        } while (taskQueue.size() > 0 && tasks.size() < NIO_THREAD_COUNT * 64);
-        
+        } while (taskQueue.size() > 0 && tasks.size() < NIO_THREAD_COUNT * 64);// 循环条件：1. 队列内有数据 2. 已获取的task小于CPU核数的0.5倍 * 64（例如8核CPU的话就是 8 * 0.5 * 64 = 256）
+        // 一次性调用所有task
         for (Future<?> f : GlobalExecutor.invokeAllTcpSuperSenseTask(tasks)) {
             f.get();
         }
@@ -137,12 +137,12 @@ public class TcpHealthCheckProcessor implements HealthCheckProcessorV2, Runnable
         while (true) {
             try {
                 processTask();
-                
+                // 使用非阻塞方法获取已准备好进行I/O的channel数量集
                 int readyCount = selector.selectNow();
                 if (readyCount <= 0) {
                     continue;
                 }
-                
+                // 处理 SelectionKey
                 Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
                 while (iter.hasNext()) {
                     SelectionKey key = iter.next();
