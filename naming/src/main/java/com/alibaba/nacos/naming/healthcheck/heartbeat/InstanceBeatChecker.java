@@ -22,7 +22,7 @@ import com.alibaba.nacos.naming.core.v2.pojo.Service;
 
 /**
  * Instance heart beat checker.
- *
+ * 检查器负责对传入的实例进行检查
  * @author xiweng.yy
  */
 public interface InstanceBeatChecker {

@@ -53,7 +53,7 @@ public class InstanceBeatCheckTask implements Interceptable {
     }
     
     @Override
-    public void passIntercept() {// 当没有被拦截的时候执行检查
+    public void passIntercept() {// 当没有被拦截的时候执行检查(Checker的存在是对拦截器的一种补充，当任务没有被拦截，但有需要进行一些检查的时候，可以使用Checker来执行检查)
         for (InstanceBeatChecker each : CHECKERS) {
             each.doCheck(client, service, instancePublishInfo);
         }

@@ -37,25 +37,25 @@ import java.util.Optional;
 
 /**
  * Instance beat checker for unhealthy instances.
- *
+ * 用于检查不健康实例的检查员：用于检查实例是否健康，若不健康则更新状态并发布事件
  * <p>Mark these instances healthy status {@code false} if beat time out.
  *
  * @author xiweng.yy
  */
 public class UnhealthyInstanceChecker implements InstanceBeatChecker {
     
-    @Override
+    @Override// 执行检查工作
     public void doCheck(Client client, Service service, HealthCheckInstancePublishInfo instance) {
         if (instance.isHealthy() && isUnhealthy(service, instance)) {
-            changeHealthyStatus(client, service, instance);
+            changeHealthyStatus(client, service, instance);// 若实例传递进来时是健康的，但经过计算超时的时候是不健康的，则需要更改状态
         }
     }
-    
+    // 根据实例的上一次更新时间判断是否超时
     private boolean isUnhealthy(Service service, HealthCheckInstancePublishInfo instance) {
         long beatTimeout = getTimeout(service, instance);
         return System.currentTimeMillis() - instance.getLastHeartBeatTime() > beatTimeout;
     }
-    
+    // 获取超时时长
     private long getTimeout(Service service, InstancePublishInfo instance) {
         Optional<Object> timeout = getTimeoutFromMetadata(service, instance);
         if (!timeout.isPresent()) {
@@ -63,20 +63,20 @@ public class UnhealthyInstanceChecker implements InstanceBeatChecker {
         }
         return timeout.map(ConvertUtils::toLong).orElse(Constants.DEFAULT_HEART_BEAT_TIMEOUT);
     }
-    
+    // 从元数据中获取超时时长
     private Optional<Object> getTimeoutFromMetadata(Service service, InstancePublishInfo instance) {
         Optional<InstanceMetadata> instanceMetadata = ApplicationUtils.getBean(NamingMetadataManager.class)
                 .getInstanceMetadata(service, instance.getMetadataId());
         return instanceMetadata.map(metadata -> metadata.getExtendData().get(PreservedMetadataKeys.HEART_BEAT_TIMEOUT));
     }
-    
+    // 更新健康状态
     private void changeHealthyStatus(Client client, Service service, HealthCheckInstancePublishInfo instance) {
-        instance.setHealthy(false);
+        instance.setHealthy(false);// 设置实例为不健康
         Loggers.EVT_LOG
                 .info("{POS} {IP-DISABLED} valid: {}:{}@{}@{}, region: {}, msg: client last beat: {}", instance.getIp(),
                         instance.getPort(), instance.getCluster(), service.getName(), UtilsAndCommons.LOCALHOST_SITE,
                         instance.getLastHeartBeatTime());
-        NotifyCenter.publishEvent(new ServiceEvent.ServiceChangedEvent(service));
+        NotifyCenter.publishEvent(new ServiceEvent.ServiceChangedEvent(service));// 发布服务变更和Client变更事件
         NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(client));
         NotifyCenter.publishEvent(new HealthStateChangeTraceEvent(System.currentTimeMillis(),
                 service.getNamespace(), service.getGroup(), service.getName(), instance.getIp(), instance.getPort(),

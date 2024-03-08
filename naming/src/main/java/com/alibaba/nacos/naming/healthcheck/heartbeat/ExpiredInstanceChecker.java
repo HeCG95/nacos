@@ -39,26 +39,26 @@ import java.util.Optional;
 
 /**
  * Instance beat checker for expired instance.
- *
+ * Instance检查器，用于检查是否过期：已过期的实例检查器，用于检查实例是否过期，若过期则从已发布列表内部移除该服务
  * <p>Delete the instance if has expired.
  *
  * @author xiweng.yy
  */
 public class ExpiredInstanceChecker implements InstanceBeatChecker {
     
-    @Override
+    @Override// 执行检查工作
     public void doCheck(Client client, Service service, HealthCheckInstancePublishInfo instance) {
-        boolean expireInstance = ApplicationUtils.getBean(GlobalConfig.class).isExpireInstance();
-        if (expireInstance && isExpireInstance(service, instance)) {
-            deleteIp(client, service, instance);
+        boolean expireInstance = ApplicationUtils.getBean(GlobalConfig.class).isExpireInstance();// 实例是否可过期
+        if (expireInstance && isExpireInstance(service, instance)) {// 若支持过期，并已过期
+            deleteIp(client, service, instance);// 从所在的Client内部已发布服务列表中移除
         }
     }
-    
+    // 判断是否超时
     private boolean isExpireInstance(Service service, HealthCheckInstancePublishInfo instance) {
         long deleteTimeout = getTimeout(service, instance);
         return System.currentTimeMillis() - instance.getLastHeartBeatTime() > deleteTimeout;
     }
-    
+    // 获取超时时间
     private long getTimeout(Service service, InstancePublishInfo instance) {
         Optional<Object> timeout = getTimeoutFromMetadata(service, instance);
         if (!timeout.isPresent()) {
@@ -66,13 +66,13 @@ public class ExpiredInstanceChecker implements InstanceBeatChecker {
         }
         return timeout.map(ConvertUtils::toLong).orElse(Constants.DEFAULT_IP_DELETE_TIMEOUT);
     }
-    
+    // 从元数据中获取超时时间
     private Optional<Object> getTimeoutFromMetadata(Service service, InstancePublishInfo instance) {
         Optional<InstanceMetadata> instanceMetadata = ApplicationUtils.getBean(NamingMetadataManager.class)
                 .getInstanceMetadata(service, instance.getMetadataId());
         return instanceMetadata.map(metadata -> metadata.getExtendData().get(PreservedMetadataKeys.IP_DELETE_TIMEOUT));
     }
-    
+    // 移除服务，并发布事件
     private void deleteIp(Client client, Service service, InstancePublishInfo instance) {
         Loggers.SRV_LOG.info("[AUTO-DELETE-IP] service: {}, ip: {}", service.toString(), JacksonUtils.toJson(instance));
         client.removeServiceInstance(service);
