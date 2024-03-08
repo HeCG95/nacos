@@ -30,7 +30,7 @@ import com.alibaba.nacos.naming.misc.UtilsAndCommons;
 
 /**
  * Thread to update ephemeral instance triggered by client beat for v2.x.
- *
+ * v2版本的心跳处理器：用于更新由v2 client 心跳触发的ephemeral实例的线程
  * @author nkorange
  */
 public class ClientBeatProcessorV2 implements BeatProcessor {
@@ -39,7 +39,7 @@ public class ClientBeatProcessorV2 implements BeatProcessor {
     
     private final RsInfo rsInfo;
     
-    private final IpPortBasedClient client;
+    private final IpPortBasedClient client;// Client对象，表示此线程是一个Client一个处理线程
     
     public ClientBeatProcessorV2(String namespace, RsInfo rsInfo, IpPortBasedClient ipPortBasedClient) {
         this.namespace = namespace;
@@ -52,22 +52,22 @@ public class ClientBeatProcessorV2 implements BeatProcessor {
         if (Loggers.EVT_LOG.isDebugEnabled()) {
             Loggers.EVT_LOG.debug("[CLIENT-BEAT] processing beat: {}", rsInfo.toString());
         }
-        String ip = rsInfo.getIp();
+        String ip = rsInfo.getIp();// 通过心跳信息组装实例
         int port = rsInfo.getPort();
         String serviceName = NamingUtils.getServiceName(rsInfo.getServiceName());
         String groupName = NamingUtils.getGroupName(rsInfo.getServiceName());
         Service service = Service.newService(namespace, groupName, serviceName, rsInfo.isEphemeral());
         HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) client.getInstancePublishInfo(service);
-        if (instance.getIp().equals(ip) && instance.getPort() == port) {
+        if (instance.getIp().equals(ip) && instance.getPort() == port) {// 若当前心跳传递过来的实例是当前线程代表的Client的实例才处理
             if (Loggers.EVT_LOG.isDebugEnabled()) {
                 Loggers.EVT_LOG.debug("[CLIENT-BEAT] refresh beat: {}", rsInfo);
             }
-            instance.setLastHeartBeatTime(System.currentTimeMillis());
-            if (!instance.isHealthy()) {
-                instance.setHealthy(true);
+            instance.setLastHeartBeatTime(System.currentTimeMillis());// 接收到心跳请求之后，设置当前时间为它的最新活跃时间
+            if (!instance.isHealthy()) {// 若不是健康状态，需要将其更新为健康状态，因为此实例是当前线程所代表的Client负责的，超时的原因可能是网络延迟，总之
+                instance.setHealthy(true);// 当前Client若接收到了心跳就应当设置它为健康状态
                 Loggers.EVT_LOG.info("service: {} {POS} {IP-ENABLED} valid: {}:{}@{}, region: {}, msg: client beat ok",
                         rsInfo.getServiceName(), ip, port, rsInfo.getCluster(), UtilsAndCommons.LOCALHOST_SITE);
-                NotifyCenter.publishEvent(new ServiceEvent.ServiceChangedEvent(service));
+                NotifyCenter.publishEvent(new ServiceEvent.ServiceChangedEvent(service));// 发布服务状态变更事件
                 NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(client));
                 NotifyCenter.publishEvent(new HealthStateChangeTraceEvent(System.currentTimeMillis(),
                         service.getNamespace(), service.getGroup(), service.getName(), instance.getIp(),

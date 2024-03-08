@@ -18,7 +18,7 @@ package com.alibaba.nacos.naming.healthcheck.heartbeat;
 
 /**
  * Thread to update ephemeral instance triggered by client beat.
- *
+ * 用于处理接收到的实例心跳
  * @author xiweng.yy
  */
 public interface BeatProcessor extends Runnable {
